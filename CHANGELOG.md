@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-11
+
+### Added
+- **Font-size slider** on the Learn screen: a vertical slider pinned to the right
+  edge scales the word font up/down. The chosen size is saved (localStorage) and
+  restored on the next visit.
+
 ## [1.1.0] - 2026-07-11
 
 ### Added
@@ -37,5 +44,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   to `main`, derives the base path from the repository name, and emits a
   `404.html` SPA fallback + `.nojekyll` marker.
 
+[1.2.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.2.0
 [1.1.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.1.0
 [1.0.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.0.0

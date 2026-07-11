@@ -1,10 +1,21 @@
 import { AppRoute } from "@/common/enum";
+import LocalStorageKey from "@/common/enum/local-storage-key.enum";
 import NoDataView from "@/components/NoDataView";
 import { useLearn } from "@/pages/Learn/Hook/learn.hook";
 import { LearnSkeleton } from "@/pages/Learn/Skeleton/learn-skeleton";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Pause, Play, Volume2 } from "lucide-react";
 import type React from "react";
+import { useState } from "react";
+
+const FONT_SCALE_MIN = 0.4;
+const FONT_SCALE_MAX = 2;
+const FONT_SCALE_STEP = 0.05;
+
+const readInitialFontScale = (): number => {
+	const saved = Number(localStorage.getItem(LocalStorageKey.LearnFontScale));
+	return Number.isFinite(saved) && saved > 0 ? saved : 1;
+};
 
 const LearnContent: React.FC = () => {
 	const {
@@ -22,6 +33,13 @@ const LearnContent: React.FC = () => {
 		goPrev,
 		readCurrent,
 	} = useLearn();
+
+	const [fontScale, setFontScale] = useState(readInitialFontScale);
+
+	const handleFontScale = (value: number) => {
+		setFontScale(value);
+		localStorage.setItem(LocalStorageKey.LearnFontScale, String(value));
+	};
 
 	if (isLoading) return <LearnSkeleton />;
 
@@ -48,6 +66,23 @@ const LearnContent: React.FC = () => {
 
 	return (
 		<div className="flex flex-1 flex-col">
+			{/* Vertical font-size slider pinned to the right edge */}
+			<div className="fixed top-1/2 right-1 z-10 flex -translate-y-1/2 flex-col items-center gap-2">
+				<span className="text-lg font-bold text-slate-400">A</span>
+				<input
+					type="range"
+					min={FONT_SCALE_MIN}
+					max={FONT_SCALE_MAX}
+					step={FONT_SCALE_STEP}
+					value={fontScale}
+					onChange={(event) => handleFontScale(Number(event.target.value))}
+					aria-label="Cỡ chữ từ vựng"
+					className="h-44 w-1.5 cursor-pointer accent-indigo-500"
+					style={{ writingMode: "vertical-lr", direction: "rtl" }}
+				/>
+				<span className="text-xs font-bold text-slate-400">a</span>
+			</div>
+
 			{/* Word / countdown — takes the full space so the eye stays centered */}
 			<div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8">
 				{isCountingDown ? (
@@ -72,7 +107,12 @@ const LearnContent: React.FC = () => {
 							key={currentWord.id}
 							className="animate-fadeIn flex w-full justify-center text-center"
 						>
-							<h1 className="wrap-break-word font-normal leading-none tracking-tight text-slate-800 text-[clamp(9rem,46vw,26rem)]">
+							<h1
+								className="wrap-break-word font-normal leading-none tracking-tight text-slate-800"
+								style={{
+									fontSize: `calc(clamp(9rem, 46vw, 26rem) * ${fontScale})`,
+								}}
+							>
 								{currentWord.term}
 							</h1>
 						</div>
