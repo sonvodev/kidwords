@@ -1,5 +1,6 @@
 import {
 	DEFAULT_TTS_VOICE,
+	TTS_VOICES,
 	isKnownVoice,
 } from "@/common/constants/tts-voices.const";
 import LocalStorageKey from "@/common/enum/local-storage-key.enum";
@@ -140,7 +141,7 @@ export const useLearn = () => {
 		countdown,
 		voice,
 		setVoice,
-		canChooseVoice: ttsService.isRemoteEnabled(),
+		canChooseVoice: ttsService.isRemoteEnabled() && TTS_VOICES.length > 1,
 		togglePlay,
 		goNext,
 		goPrev,
