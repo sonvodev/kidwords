@@ -1,39 +1,42 @@
 # KidWords
 
-Ứng dụng học từ vựng cho trẻ em. Người dùng **nạp** một danh sách từ vựng theo
-ngày, sau đó màn hình **học** tự động chạy qua từng từ (kèm tự động đọc).
+A simple vocabulary-learning web app for young children. A parent **loads** a
+list of words for the day, and the **learn** screen plays through them one by
+one in a large font, reading each word aloud.
 
-Dữ liệu hiện được lưu ở `localStorage`. Khi backend sẵn sàng, chỉ cần đổi phần
-thân của service (xem [Chuyển sang API](#chuyển-sang-api)).
+🔗 **Live demo:** https://sonvodev.github.io/kidwords/
+
+Data is currently stored in the browser's `localStorage`. When a backend is
+ready, only the service layer changes — see [Switching to an API](#switching-to-an-api).
 
 ## Stack
 
-Kế thừa quy ước từ các dự án MFE khác:
+Follows the conventions used across the other micro-frontend projects:
 
 - **React 19** + **Rsbuild**
 - **TanStack Router** (file-based routing) + **TanStack Query** (server state)
 - **Tailwind CSS 4**
 - **react-hook-form** + **zod** (form & validation)
-- **sonner** (toast), **lucide-react** (icon), **classnames**
+- **sonner** (toasts), **lucide-react** (icons), **classnames**
 - **Biome** (lint + format), **TypeScript** (strict)
 
-## Lệnh
+## Commands
 
 ```bash
 pnpm install
-pnpm dev          # dev server (port 5000, hoặc REACT_APP_PORT)
+pnpm dev          # dev server (port 5000, or REACT_APP_PORT)
 pnpm build        # production build
-pnpm preview      # xem thử bản build
+pnpm preview      # preview the production build
 pnpm check        # biome lint & format
 pnpm typecheck    # tsc --noEmit
 ```
 
-## Cấu trúc
+## Project structure
 
 ```
 src/
   common/
-    constants/        # word-bank, form defaults
+    constants/        # kid word bank, form defaults
     enum/             # AppRoute, QueryKey, LocalStorageKey, ApiEndPoints, MENU_ITEMS
   components/         # Sidebar, Loading, Skeleton, NoDataView (PascalCase + index.tsx)
   contexts/           # SidebarProvider (createContext + Provider + useXxx)
@@ -42,38 +45,57 @@ src/
   models/             # *.model.ts
   pages/
     Learn/            # "Học từ vựng"  — index (lazy) + content + Hook + Skeleton
-    Vocabulary/       # "Nạp từ vựng"  — + Sections (form, history-list)
+    Vocabulary/       # "Nạp từ vựng"  — + Sections (form, history list)
     404Page/
-  routes/             # file-based routes -> routeTree.gen.ts (KHÔNG sửa tay)
+  routes/             # file-based routes -> routeTree.gen.ts (do NOT edit by hand)
   services/           # ServiceBase + *.service.ts (singleton)
   utils/              # storageUtils, utils, plugins/axios
 ```
 
-Quy ước chính (giống các dự án khác): import qua alias `@/…`; dùng enum thay cho
-literal cho route/query-key/storage-key; mỗi service kế thừa `ServiceBase` và
-export default singleton; mỗi page theo mẫu `index.tsx (lazy + Suspense +
-Skeleton) → *-content.tsx → Hook/*.hook.ts`.
+Key conventions (shared with the other projects): import via the `@/…` aliases;
+use enums instead of literals for routes / query keys / storage keys; every
+service extends `ServiceBase` and exports a default singleton; every page follows
+the pattern `index.tsx (lazy + Suspense + Skeleton) → *-content.tsx → Hook/*.hook.ts`.
 
-## Tính năng
+## Features
 
-- **Menu** (icon góc trái) → `Học từ vựng`, `Nạp từ vựng`.
-- **Học từ vựng**: chỉ hiển thị từ ở giữa trang (font lớn, không in đậm, không
-  hiện nghĩa), tự chạy theo `gapTime`, tự động đọc (Web Speech API), có nút
-  play/pause · trước · sau · đọc lại.
-- **Nạp từ vựng**: lịch sử nạp nhóm theo ngày, ô tìm kiếm, nút mở form; mỗi mục
-  lịch sử có nút **sửa** (chỉnh lại số lượng / danh sách từ) và **xóa**.
-  - Form: `Số lượng` (mặc định 10) — tự điền `Danh sách từ` từ kho từ vựng cho
-    bé 3 tuổi, có thể **sửa thủ công**; `Gap time` (mặc định 1s); switch
-    `Tự động đọc` / `Tự động play`.
-- **Loading**: skeleton khi vào trang/tải dữ liệu; overlay chặn thao tác khi đang
-  nạp; nút bị disable khi đang xử lý.
+- **Menu** (top-left icon) → `Học từ vựng` (Learn) and `Nạp từ vựng` (Load words).
+- **Learn**: shows a single word centered in a large, non-bold font (no meaning
+  shown). On entering the screen it counts down **3 → 2 → 1**, then auto-plays.
+  Playback stops at the last word (pressing play again restarts from the top).
+  Each word is read aloud via the Web Speech API. Controls (previous · play/pause
+  · next · read again) are pinned to the bottom of the page so they don't distract
+  from the word.
+- **Load words**: history grouped by day, a search box, and a form to add a set.
+  Each history entry can be **edited** (change the count / word list) or deleted.
+  - The form is split into two columns: **settings** (quantity — default 10; gap
+    time — default 1s; auto-read; auto-play) and the **word list**, where each
+    word has its own input. Changing the quantity auto-fills the list from a
+    3-year-old word bank, and every word can be edited, added, or removed by hand.
+- **Loading states**: skeletons while a page/data loads; a blocking overlay while
+  saving; buttons disable while an action is in flight.
 
-## Chuyển sang API
+## Deployment
 
-`services/vocabulary/vocabulary.service.ts` đã kế thừa `ServiceBase` và trả về
-đúng shape mà API sẽ trả. Khi có backend:
+Hosted on **GitHub Pages** (free for public repositories).
 
-1. Đặt `REACT_APP_API_BASE_URL` trong `.env`.
-2. Bỏ interceptor auth vào `utils/plugins/axios.ts` nếu cần.
-3. Thay phần đọc/ghi `localStorage` bằng `super.getAsync/postAsync/deleteAsync`
-   trỏ tới `ApiEndPoints`. Các query hook và UI không cần đổi.
+- [.github/workflows/deploy.yml](.github/workflows/deploy.yml) builds and deploys
+  on every push to `main`. It derives the Pages base path from the repository name
+  (`REACT_APP_BASE_PATH=/<repo>/`), so renaming the repo keeps working.
+- [rsbuild.config.ts](rsbuild.config.ts) and [src/bootstrap.tsx](src/bootstrap.tsx)
+  honor `REACT_APP_BASE_PATH` so the app runs under a subpath (`/kidwords/`).
+- A `404.html` copy of `index.html` plus a `.nojekyll` marker are emitted during
+  the deploy so client-side routes survive a hard refresh.
+
+To deploy your own copy: push to a **public** repo, then set
+**Settings → Pages → Source → GitHub Actions**.
+
+## Switching to an API
+
+`services/vocabulary/vocabulary.service.ts` already extends `ServiceBase` and
+returns the same shapes the API will. When a backend is available:
+
+1. Set `REACT_APP_API_BASE_URL` in `.env`.
+2. Add any auth interceptors to `utils/plugins/axios.ts` if needed.
+3. Replace the `localStorage` reads/writes with `super.getAsync/postAsync/deleteAsync`
+   calls against `ApiEndPoints`. The query hooks and UI stay unchanged.
