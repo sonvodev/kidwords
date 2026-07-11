@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-11
+
+### Added
+- **Natural Vietnamese voice (FPT.AI)**: optional integration via a Cloudflare
+  Worker proxy (`tts-proxy/`). When configured (repo variable `TTS_PROXY_URL`),
+  the Learn screen reads words with FPT voices and shows a **voice picker**
+  (male/female · Bắc/Trung/Nam, default `leminh` = male Northern). Audio is cached
+  in IndexedDB (fetched once per voice) and prefetched per set. Falls back to the
+  browser Web Speech API when the proxy is not configured or on error.
+
 ## [1.2.0] - 2026-07-11
 
 ### Added
@@ -44,6 +54,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   to `main`, derives the base path from the repository name, and emits a
   `404.html` SPA fallback + `.nojekyll` marker.
 
+[1.3.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.3.0
 [1.2.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.2.0
 [1.1.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.1.0
 [1.0.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.0.0

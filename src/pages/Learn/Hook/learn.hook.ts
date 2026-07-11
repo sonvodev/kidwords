@@ -1,10 +1,15 @@
+import { DEFAULT_TTS_VOICE } from "@/common/constants/tts-voices.const";
+import LocalStorageKey from "@/common/enum/local-storage-key.enum";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGetLatestVocabularySet } from "@/hooks/queries/useVocabulary";
-import { speak } from "@/utils/utils";
+import ttsService from "@/services/tts/tts.service";
 import { useCallback, useEffect, useState } from "react";
 
 /** Seconds counted down (3 → 2 → 1) before auto-play starts. */
 const COUNTDOWN_START = 3;
+
+const readSavedVoice = (): string =>
+	localStorage.getItem(LocalStorageKey.TtsVoice) || DEFAULT_TTS_VOICE;
 
 export const useLearn = () => {
 	const { user, isInitializing } = useAuth();
@@ -22,6 +27,12 @@ export const useLearn = () => {
 	const [currentLoop, setCurrentLoop] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [countdown, setCountdown] = useState<number | null>(null);
+	const [voice, setVoiceState] = useState(readSavedVoice);
+
+	const setVoice = useCallback((next: string) => {
+		setVoiceState(next);
+		localStorage.setItem(LocalStorageKey.TtsVoice, next);
+	}, []);
 
 	// Reset playback whenever a new set becomes the latest one. Start the 3-2-1
 	// countdown first when auto-play is enabled.
@@ -31,6 +42,15 @@ export const useLearn = () => {
 		setIsPlaying(false);
 		setCountdown(autoPlay ? COUNTDOWN_START : null);
 	}, [latestSet?.id, autoPlay]);
+
+	// Warm the TTS cache for the whole set so playback is instant.
+	useEffect(() => {
+		if (total === 0) return;
+		ttsService.prefetch(
+			words.map((word) => word.term),
+			voice,
+		);
+	}, [latestSet?.id, voice, total]);
 
 	// Tick the countdown, then kick off auto-play when it reaches zero.
 	useEffect(() => {
@@ -71,8 +91,8 @@ export const useLearn = () => {
 	// countdown). Firing on `countdown` clearing also reads the very first word.
 	useEffect(() => {
 		if (!autoRead || total === 0 || countdown !== null) return;
-		speak(words[currentIndex]?.term ?? "");
-	}, [currentIndex, autoRead, total, countdown]);
+		ttsService.speak(words[currentIndex]?.term ?? "", voice);
+	}, [currentIndex, autoRead, total, countdown, voice]);
 
 	const isFinished = currentIndex >= total - 1 && currentLoop >= loopCount;
 
@@ -100,8 +120,8 @@ export const useLearn = () => {
 
 	const readCurrent = useCallback(() => {
 		if (total === 0) return;
-		speak(words[currentIndex]?.term ?? "");
-	}, [words, currentIndex, total]);
+		ttsService.speak(words[currentIndex]?.term ?? "", voice);
+	}, [words, currentIndex, total, voice]);
 
 	return {
 		isLoading: isInitializing || !user || isQueryLoading,
@@ -113,6 +133,9 @@ export const useLearn = () => {
 		loopCount,
 		isPlaying,
 		countdown,
+		voice,
+		setVoice,
+		canChooseVoice: ttsService.isRemoteEnabled(),
 		togglePlay,
 		goNext,
 		goPrev,

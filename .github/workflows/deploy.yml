@@ -36,6 +36,8 @@ jobs:
         env:
           # Project site is served from https://<user>.github.io/<repo>/
           REACT_APP_BASE_PATH: /${{ github.event.repository.name }}/
+          # Optional: set repo variable TTS_PROXY_URL to enable FPT.AI voices.
+          REACT_APP_TTS_PROXY_URL: ${{ vars.TTS_PROXY_URL }}
 
       - name: SPA fallback + disable Jekyll
         run: |

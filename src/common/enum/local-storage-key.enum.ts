@@ -3,6 +3,8 @@ enum LocalStorageKey {
 	SessionUserId = "kidwords_session_user_id",
 	/** Word font-size multiplier chosen via the Learn screen slider. */
 	LearnFontScale = "kidwords_learn_font_scale",
+	/** Selected FPT.AI voice id for reading words aloud. */
+	TtsVoice = "kidwords_tts_voice",
 }
 
 export default LocalStorageKey;

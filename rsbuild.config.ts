@@ -53,6 +53,9 @@ const config: RsbuildConfig = {
 			"process.env": {},
 			...publicVars,
 			"process.env.REACT_APP_BASE_PATH": JSON.stringify(basePath),
+			"process.env.REACT_APP_TTS_PROXY_URL": JSON.stringify(
+				process.env.REACT_APP_TTS_PROXY_URL || "",
+			),
 		},
 	},
 	output: {

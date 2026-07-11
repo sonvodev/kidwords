@@ -86,6 +86,10 @@ the pattern `index.tsx (lazy + Suspense + Skeleton) → *-content.tsx → Hook/*
     added, or removed by hand.
 - **Learn playback** loops the whole list `loopCount` times (default 2) before
   auto-stopping; a "Vòng x/N" indicator shows the current loop.
+- **Voice**: reads words aloud with the browser's Web Speech API by default.
+  Optionally enable natural Vietnamese FPT.AI voices (male/female · Bắc/Trung/Nam)
+  with a voice picker — see [`tts-proxy/`](tts-proxy/README.md). Audio is cached
+  per voice in IndexedDB.
 - **Loading states**: skeletons while a page/data loads; a blocking overlay while
   saving; buttons disable while an action is in flight.
 

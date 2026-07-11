@@ -1,3 +1,4 @@
+import { TTS_VOICES } from "@/common/constants/tts-voices.const";
 import { AppRoute } from "@/common/enum";
 import LocalStorageKey from "@/common/enum/local-storage-key.enum";
 import NoDataView from "@/components/NoDataView";
@@ -28,6 +29,9 @@ const LearnContent: React.FC = () => {
 		loopCount,
 		isPlaying,
 		countdown,
+		voice,
+		setVoice,
+		canChooseVoice,
 		togglePlay,
 		goNext,
 		goPrev,
@@ -155,14 +159,31 @@ const LearnContent: React.FC = () => {
 					</button>
 				</div>
 
-				<button
-					type="button"
-					onClick={readCurrent}
-					className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50"
-				>
-					<Volume2 className="h-4 w-4" />
-					Đọc lại
-				</button>
+				<div className="flex items-center gap-2">
+					<button
+						type="button"
+						onClick={readCurrent}
+						className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50"
+					>
+						<Volume2 className="h-4 w-4" />
+						Đọc lại
+					</button>
+
+					{canChooseVoice && (
+						<select
+							value={voice}
+							onChange={(event) => setVoice(event.target.value)}
+							aria-label="Chọn giọng đọc"
+							className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 outline-none focus:border-indigo-400"
+						>
+							{TTS_VOICES.map((option) => (
+								<option key={option.id} value={option.id}>
+									{option.label}
+								</option>
+							))}
+						</select>
+					)}
+				</div>
 			</div>
 		</div>
 	);
