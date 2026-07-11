@@ -1,4 +1,7 @@
-import { DEFAULT_TTS_VOICE } from "@/common/constants/tts-voices.const";
+import {
+	DEFAULT_TTS_VOICE,
+	isKnownVoice,
+} from "@/common/constants/tts-voices.const";
 import LocalStorageKey from "@/common/enum/local-storage-key.enum";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGetLatestVocabularySet } from "@/hooks/queries/useVocabulary";
@@ -8,8 +11,10 @@ import { useCallback, useEffect, useState } from "react";
 /** Seconds counted down (3 → 2 → 1) before auto-play starts. */
 const COUNTDOWN_START = 3;
 
-const readSavedVoice = (): string =>
-	localStorage.getItem(LocalStorageKey.TtsVoice) || DEFAULT_TTS_VOICE;
+const readSavedVoice = (): string => {
+	const saved = localStorage.getItem(LocalStorageKey.TtsVoice);
+	return saved && isKnownVoice(saved) ? saved : DEFAULT_TTS_VOICE;
+};
 
 export const useLearn = () => {
 	const { user, isInitializing } = useAuth();

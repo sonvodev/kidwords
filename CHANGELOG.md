@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-07-11
+
+### Changed
+- **TTS provider switched to Microsoft Edge read-aloud** (free, no account/API
+  key) after FPT.AI's free tier became unusable. Voices are now
+  `vi-VN-NamMinhNeural` (male) and `vi-VN-HoaiMyNeural` (female), both Northern.
+  The Worker speaks via the Edge websocket endpoint and edge-caches clips; the
+  app validates any stale saved voice id and still falls back to the browser
+  voice when the proxy is unset or errors.
+
 ## [1.3.1] - 2026-07-11
 
 ### Fixed
@@ -62,6 +72,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   to `main`, derives the base path from the repository name, and emits a
   `404.html` SPA fallback + `.nojekyll` marker.
 
+[1.4.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.4.0
 [1.3.1]: https://github.com/sonvodev/kidwords/releases/tag/v1.3.1
 [1.3.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.3.0
 [1.2.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.2.0
