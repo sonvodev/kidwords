@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+html,
+body,
+#root {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: "Poppins", system-ui, -apple-system, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
