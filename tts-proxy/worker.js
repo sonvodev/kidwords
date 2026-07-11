@@ -1,13 +1,12 @@
 /**
- * Cloudflare Worker — Google Cloud Text-to-Speech proxy for KidWords.
+ * Cloudflare Worker — Vietnamese Text-to-Speech proxy for KidWords.
  *
- * Keeps the Google API key secret and adds CORS. Given ?text=...&voice=... it
- * returns an mp3. Results are cached at the edge. Vietnamese voices are Northern;
- * `vi-VN-Wavenet-D` / `-B` are male.
+ * Uses Google Translate's TTS voice (Northern Vietnamese) — free, no account and
+ * no API key. Given ?text=... it returns an mp3. Results are cached at the edge.
+ * Best for short text (single words); the source caps ~200 characters per call.
  *
- * Set in the Cloudflare dashboard (Worker → Settings → Variables):
- *   - GOOGLE_API_KEY  (secret)  a Text-to-Speech API key from Google Cloud
- *   - ALLOWED_ORIGIN  (plain)   e.g. https://sonvodev.github.io  (or * to allow all)
+ * Optional variable (Worker → Settings → Variables):
+ *   - ALLOWED_ORIGIN  e.g. https://sonvodev.github.io  (or * to allow all)
  */
 export default {
 	async fetch(request, env, ctx) {
@@ -22,43 +21,30 @@ export default {
 
 		const url = new URL(request.url);
 		const text = url.searchParams.get("text");
-		const voice = url.searchParams.get("voice") || "vi-VN-Wavenet-D";
+		const lang = url.searchParams.get("lang") || "vi";
 		if (!text) {
 			return new Response("Missing 'text'", { status: 400, headers: cors });
 		}
 
+		// Serve identical requests straight from the edge cache.
 		const cache = caches.default;
 		const cacheKey = new Request(url.toString(), { method: "GET" });
 		const hit = await cache.match(cacheKey);
 		if (hit) return hit;
 
-		const upstream = await fetch(
-			`https://texttospeech.googleapis.com/v1/text:synthesize?key=${env.GOOGLE_API_KEY}`,
-			{
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					input: { text },
-					voice: { languageCode: "vi-VN", name: voice },
-					audioConfig: { audioEncoding: "MP3", speakingRate: 0.9 },
-				}),
-			},
-		);
+		const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
+		const upstream = await fetch(ttsUrl, {
+			headers: { "User-Agent": "Mozilla/5.0" },
+		});
 
-		const data = await upstream.json().catch(() => null);
-		if (!upstream.ok || !data?.audioContent) {
-			return new Response(JSON.stringify(data ?? { error: "TTS failed" }), {
+		if (!upstream.ok) {
+			return new Response(JSON.stringify({ status: upstream.status }), {
 				status: 502,
 				headers: { ...cors, "Content-Type": "application/json" },
 			});
 		}
 
-		// Google returns base64-encoded mp3.
-		const binary = atob(data.audioContent);
-		const bytes = new Uint8Array(binary.length);
-		for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-		const response = new Response(bytes, {
+		const response = new Response(upstream.body, {
 			headers: {
 				...cors,
 				"Content-Type": "audio/mpeg",

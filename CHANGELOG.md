@@ -4,15 +4,6 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.0] - 2026-07-11
-
-### Changed
-- **TTS provider switched to Google Cloud Text-to-Speech** for natural voices
-  with a **male** option. Voices: `vi-VN-Wavenet-D`/`-A` and `vi-VN-Standard-D`/`-A`
-  (Northern), default male WaveNet. The voice picker returns; the Worker holds the
-  Google API key and edge-caches clips. Still falls back to the browser voice when
-  the proxy is unset or errors.
-
 ## [1.4.1] - 2026-07-11
 
 ### Changed
@@ -89,7 +80,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   to `main`, derives the base path from the repository name, and emits a
   `404.html` SPA fallback + `.nojekyll` marker.
 
-[1.5.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.5.0
 [1.4.1]: https://github.com/sonvodev/kidwords/releases/tag/v1.4.1
 [1.4.0]: https://github.com/sonvodev/kidwords/releases/tag/v1.4.0
 [1.3.1]: https://github.com/sonvodev/kidwords/releases/tag/v1.3.1

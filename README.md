@@ -87,10 +87,10 @@ the pattern `index.tsx (lazy + Suspense + Skeleton) → *-content.tsx → Hook/*
 - **Learn playback** loops the whole list `loopCount` times (default 2) before
   auto-stopping; a "Vòng x/N" indicator shows the current loop.
 - **Voice**: reads words aloud with the browser's Web Speech API by default.
-  Optionally enable natural Vietnamese voices via **Google Cloud TTS**
-  (`vi-VN-Wavenet-D` male / `-A` female, Northern) with a voice picker — see
-  [`tts-proxy/`](tts-proxy/README.md). Audio is cached per voice in IndexedDB and
-  at the Worker edge.
+  Optionally enable natural Vietnamese voices (Microsoft Edge read-aloud —
+  `vi-VN-NamMinhNeural` male / `vi-VN-HoaiMyNeural` female, Northern) with a voice
+  picker — see [`tts-proxy/`](tts-proxy/README.md). Free, no account/API key.
+  Audio is cached per voice in IndexedDB and at the Worker edge.
 - **Loading states**: skeletons while a page/data loads; a blocking overlay while
   saving; buttons disable while an action is in flight.
 
