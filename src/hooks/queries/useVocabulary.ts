@@ -1,4 +1,5 @@
 import { QueryKey } from "@/common/enum";
+import { useAuth } from "@/contexts/AuthProvider";
 import type { SaveVocabularySetRequest } from "@/models/vocabulary.model";
 import vocabularyService from "@/services/vocabulary/vocabulary.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,17 +9,23 @@ const invalidateKeys = [
 	QueryKey.GetLatestVocabularySetKey,
 ];
 
-export const useGetVocabularySets = () =>
-	useQuery({
-		queryKey: [QueryKey.GetVocabularySetsKey],
-		queryFn: () => vocabularyService.getSets(),
+export const useGetVocabularySets = () => {
+	const { user } = useAuth();
+	return useQuery({
+		queryKey: [QueryKey.GetVocabularySetsKey, user?.id],
+		queryFn: () => vocabularyService.getSets(user!.id),
+		enabled: !!user,
 	});
+};
 
-export const useGetLatestVocabularySet = () =>
-	useQuery({
-		queryKey: [QueryKey.GetLatestVocabularySetKey],
-		queryFn: () => vocabularyService.getLatestSet(),
+export const useGetLatestVocabularySet = () => {
+	const { user } = useAuth();
+	return useQuery({
+		queryKey: [QueryKey.GetLatestVocabularySetKey, user?.id],
+		queryFn: () => vocabularyService.getLatestSet(user!.id),
+		enabled: !!user,
 	});
+};
 
 const useInvalidateVocabulary = () => {
 	const queryClient = useQueryClient();
@@ -30,10 +37,11 @@ const useInvalidateVocabulary = () => {
 };
 
 export const useCreateVocabularySet = () => {
+	const { user } = useAuth();
 	const invalidate = useInvalidateVocabulary();
 	return useMutation({
 		mutationFn: (payload: SaveVocabularySetRequest) =>
-			vocabularyService.createSet(payload),
+			vocabularyService.createSet(user!.id, payload),
 		onSuccess: invalidate,
 	});
 };

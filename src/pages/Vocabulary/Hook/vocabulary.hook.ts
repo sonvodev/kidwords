@@ -1,5 +1,6 @@
 import { VOCABULARY_FORM_DEFAULTS } from "@/common/constants/vocabulary.const";
 import { getKidWords } from "@/common/constants/word-bank.const";
+import { useAuth } from "@/contexts/AuthProvider";
 import {
 	useCreateVocabularySet,
 	useDeleteVocabularySet,
@@ -30,6 +31,7 @@ interface FormConfig {
 const buildCreateValues = (): VocabularyFormValues => ({
 	quantity: VOCABULARY_FORM_DEFAULTS.quantity,
 	gapTime: VOCABULARY_FORM_DEFAULTS.gapTime,
+	loopCount: VOCABULARY_FORM_DEFAULTS.loopCount,
 	autoRead: VOCABULARY_FORM_DEFAULTS.autoRead,
 	autoPlay: VOCABULARY_FORM_DEFAULTS.autoPlay,
 	words: getKidWords(VOCABULARY_FORM_DEFAULTS.quantity).map((term) => ({
@@ -40,6 +42,7 @@ const buildCreateValues = (): VocabularyFormValues => ({
 const buildEditValues = (set: VocabularySet): VocabularyFormValues => ({
 	quantity: set.quantity,
 	gapTime: set.gapTime,
+	loopCount: set.loopCount,
 	autoRead: set.autoRead,
 	autoPlay: set.autoPlay,
 	words: set.words.map((word) => ({ term: word.term })),
@@ -49,7 +52,9 @@ export const useVocabulary = () => {
 	const [search, setSearch] = useState("");
 	const [formConfig, setFormConfig] = useState<FormConfig | null>(null);
 
-	const { data: sets, isLoading } = useGetVocabularySets();
+	const { user, isInitializing } = useAuth();
+	const { data: sets, isLoading: isQueryLoading } = useGetVocabularySets();
+	const isLoading = isInitializing || !user || isQueryLoading;
 	const { mutateAsync: createSet, isPending: isCreating } =
 		useCreateVocabularySet();
 	const { mutateAsync: updateSet, isPending: isUpdating } =

@@ -1,93 +1,87 @@
-import { LocalStorageKey } from "@/common/enum";
 import type {
 	SaveVocabularySetRequest,
 	VocabularySet,
 	VocabularyWord,
 } from "@/models/vocabulary.model";
 import { ServiceBase } from "@/services/_base.service";
-import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
+import { getDb } from "@/utils/plugins/db";
 import { generateId } from "@/utils/utils";
-
-/** Mimic network latency so loading skeletons/spinners are exercised. */
-const LATENCY_MS = 450;
-const delay = <T>(value: T): Promise<T> =>
-	new Promise((resolve) => setTimeout(() => resolve(value), LATENCY_MS));
 
 const toWords = (terms: string[]): VocabularyWord[] =>
 	terms.map((term) => ({ id: generateId(), term }));
 
+const byNewest = (a: VocabularySet, b: VocabularySet): number =>
+	b.createdAt.localeCompare(a.createdAt);
+
 /**
- * Vocabulary persistence. Backed by localStorage until the API is ready — every
- * public method is async and returns the same shapes the endpoints in
- * `ApiEndPoints` will, so the swap to `super.getAsync/postAsync` is localised.
+ * Vocabulary persistence on IndexedDB, scoped per user. Async signatures match
+ * the future API so the swap to `super.getAsync/postAsync` stays localised.
  */
 export class VocabularyService extends ServiceBase {
-	private read(): VocabularySet[] {
-		return getStorageItem<VocabularySet[]>(LocalStorageKey.VocabularySets, []);
-	}
-
-	private write(sets: VocabularySet[]): void {
-		setStorageItem(LocalStorageKey.VocabularySets, sets);
-	}
-
-	/** Newest first. */
-	async getSets(): Promise<VocabularySet[]> {
-		const sets = [...this.read()].sort((a, b) =>
-			b.createdAt.localeCompare(a.createdAt),
-		);
-		return delay(sets);
+	/** Newest first, for the given user only. */
+	async getSets(userId: string): Promise<VocabularySet[]> {
+		const db = await getDb();
+		const sets = await db.getAllFromIndex("vocabularySets", "by-user", userId);
+		return sets.sort(byNewest);
 	}
 
 	async getSetById(id: string): Promise<VocabularySet | null> {
-		const found = this.read().find((set) => set.id === id) ?? null;
-		return delay(found);
+		const db = await getDb();
+		return (await db.get("vocabularySets", id)) ?? null;
 	}
 
-	async getLatestSet(): Promise<VocabularySet | null> {
-		const [latest] = await this.getSets();
+	async getLatestSet(userId: string): Promise<VocabularySet | null> {
+		const [latest] = await this.getSets(userId);
 		return latest ?? null;
 	}
 
-	async createSet(payload: SaveVocabularySetRequest): Promise<VocabularySet> {
+	async createSet(
+		userId: string,
+		payload: SaveVocabularySetRequest,
+	): Promise<VocabularySet> {
 		const words = toWords(payload.words);
 		const newSet: VocabularySet = {
 			id: generateId(),
+			userId,
 			createdAt: new Date().toISOString(),
 			quantity: words.length,
 			gapTime: payload.gapTime,
+			loopCount: payload.loopCount,
 			autoRead: payload.autoRead,
 			autoPlay: payload.autoPlay,
 			words,
 		};
 
-		this.write([newSet, ...this.read()]);
-		return delay(newSet);
+		const db = await getDb();
+		await db.put("vocabularySets", newSet);
+		return newSet;
 	}
 
 	async updateSet(
 		id: string,
 		payload: SaveVocabularySetRequest,
 	): Promise<VocabularySet | null> {
-		const sets = this.read();
-		const target = sets.find((set) => set.id === id);
-		if (!target) return delay(null);
+		const db = await getDb();
+		const target = await db.get("vocabularySets", id);
+		if (!target) return null;
 
 		const updated: VocabularySet = {
 			...target,
 			quantity: payload.words.length,
 			gapTime: payload.gapTime,
+			loopCount: payload.loopCount,
 			autoRead: payload.autoRead,
 			autoPlay: payload.autoPlay,
 			words: toWords(payload.words),
 		};
 
-		this.write(sets.map((set) => (set.id === id ? updated : set)));
-		return delay(updated);
+		await db.put("vocabularySets", updated);
+		return updated;
 	}
 
 	async deleteSet(id: string): Promise<void> {
-		this.write(this.read().filter((set) => set.id !== id));
-		return delay(undefined);
+		const db = await getDb();
+		await db.delete("vocabularySets", id);
 	}
 }
 

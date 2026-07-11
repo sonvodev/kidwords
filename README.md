@@ -6,8 +6,15 @@ one in a large font, reading each word aloud.
 
 🔗 **Live demo:** https://sonvodev.github.io/kidwords/
 
-Data is currently stored in the browser's `localStorage`. When a backend is
-ready, only the service layer changes — see [Switching to an API](#switching-to-an-api).
+Each parent signs up for a **local account**, and their word lists are stored
+privately per account in the browser's **IndexedDB** — so different teaching
+paths never mix. When a backend is ready, only the service layer changes — see
+[Switching to an API](#switching-to-an-api).
+
+> **Note on auth:** accounts are local to the browser (credentials are hashed
+> with PBKDF2 and kept in IndexedDB). This separates profiles on a device; it is
+> not real server-side security and does not sync across devices. A real backend
+> is the path to that.
 
 ## Stack
 
@@ -38,18 +45,19 @@ src/
   common/
     constants/        # kid word bank, form defaults
     enum/             # AppRoute, QueryKey, LocalStorageKey, ApiEndPoints, MENU_ITEMS
-  components/         # Sidebar, Loading, Skeleton, NoDataView (PascalCase + index.tsx)
-  contexts/           # SidebarProvider (createContext + Provider + useXxx)
+  components/         # Sidebar, Loading, Skeleton, NoDataView, AuthShell
+  contexts/           # AuthProvider, SidebarProvider (createContext + Provider + useXxx)
   hooks/queries/      # TanStack Query hooks
-  layouts/MainLayout/ # header + menu icon + <Outlet/>
-  models/             # *.model.ts
+  layouts/MainLayout/ # header (menu + account) + <Outlet/>
+  models/             # *.model.ts (user, vocabulary)
   pages/
+    Login/ Register/  # local account auth
     Learn/            # "Học từ vựng"  — index (lazy) + content + Hook + Skeleton
     Vocabulary/       # "Nạp từ vựng"  — + Sections (form, history list)
     404Page/
   routes/             # file-based routes -> routeTree.gen.ts (do NOT edit by hand)
-  services/           # ServiceBase + *.service.ts (singleton)
-  utils/              # storageUtils, utils, plugins/axios
+  services/           # ServiceBase + auth/vocabulary *.service.ts (singletons)
+  utils/              # crypto, authUtils, authLoaders, plugins/{db,axios}
 ```
 
 Key conventions (shared with the other projects): import via the `@/…` aliases;
@@ -59,6 +67,9 @@ the pattern `index.tsx (lazy + Suspense + Skeleton) → *-content.tsx → Hook/*
 
 ## Features
 
+- **Accounts**: register / login (local, per-browser). Word lists are scoped to
+  the signed-in account; the header shows the current user with a logout button.
+  App routes are guarded and redirect to login when signed out.
 - **Menu** (top-left icon) → `Học từ vựng` (Learn) and `Nạp từ vựng` (Load words).
 - **Learn**: shows a single word centered in a large, non-bold font (no meaning
   shown). On entering the screen it counts down **3 → 2 → 1**, then auto-plays.
@@ -69,9 +80,12 @@ the pattern `index.tsx (lazy + Suspense + Skeleton) → *-content.tsx → Hook/*
 - **Load words**: history grouped by day, a search box, and a form to add a set.
   Each history entry can be **edited** (change the count / word list) or deleted.
   - The form is split into two columns: **settings** (quantity — default 10; gap
-    time — default 1s; auto-read; auto-play) and the **word list**, where each
-    word has its own input. Changing the quantity auto-fills the list from a
-    3-year-old word bank, and every word can be edited, added, or removed by hand.
+    time — default 1s; **loops — default 2**; auto-read; auto-play) and the
+    **word list**, where each word has its own input. Changing the quantity
+    auto-fills the list from a 3-year-old word bank, and every word can be edited,
+    added, or removed by hand.
+- **Learn playback** loops the whole list `loopCount` times (default 2) before
+  auto-stopping; a "Vòng x/N" indicator shows the current loop.
 - **Loading states**: skeletons while a page/data loads; a blocking overlay while
   saving; buttons disable while an action is in flight.
 
@@ -92,10 +106,12 @@ To deploy your own copy: push to a **public** repo, then set
 
 ## Switching to an API
 
-`services/vocabulary/vocabulary.service.ts` already extends `ServiceBase` and
-returns the same shapes the API will. When a backend is available:
+Both `services/auth/auth.service.ts` and `services/vocabulary/vocabulary.service.ts`
+already extend `ServiceBase` and return the same shapes the API will. When a
+backend is available:
 
 1. Set `REACT_APP_API_BASE_URL` in `.env`.
 2. Add any auth interceptors to `utils/plugins/axios.ts` if needed.
-3. Replace the `localStorage` reads/writes with `super.getAsync/postAsync/deleteAsync`
-   calls against `ApiEndPoints`. The query hooks and UI stay unchanged.
+3. Replace the IndexedDB reads/writes (`utils/plugins/db.ts`) with
+   `super.getAsync/postAsync/deleteAsync` calls against `ApiEndPoints`. The query
+   hooks, contexts, and UI stay unchanged.

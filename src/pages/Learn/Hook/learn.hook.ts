@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthProvider";
 import { useGetLatestVocabularySet } from "@/hooks/queries/useVocabulary";
 import { speak } from "@/utils/utils";
 import { useCallback, useEffect, useState } from "react";
@@ -6,15 +7,19 @@ import { useCallback, useEffect, useState } from "react";
 const COUNTDOWN_START = 3;
 
 export const useLearn = () => {
-	const { data: latestSet, isLoading } = useGetLatestVocabularySet();
+	const { user, isInitializing } = useAuth();
+	const { data: latestSet, isLoading: isQueryLoading } =
+		useGetLatestVocabularySet();
 
 	const words = latestSet?.words ?? [];
 	const total = words.length;
 	const autoRead = latestSet?.autoRead ?? false;
 	const autoPlay = latestSet?.autoPlay ?? false;
 	const gapTime = latestSet?.gapTime ?? 1;
+	const loopCount = latestSet?.loopCount ?? 1;
 
 	const [currentIndex, setCurrentIndex] = useState(0);
+	const [currentLoop, setCurrentLoop] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [countdown, setCountdown] = useState<number | null>(null);
 
@@ -22,6 +27,7 @@ export const useLearn = () => {
 	// countdown first when auto-play is enabled.
 	useEffect(() => {
 		setCurrentIndex(0);
+		setCurrentLoop(1);
 		setIsPlaying(false);
 		setCountdown(autoPlay ? COUNTDOWN_START : null);
 	}, [latestSet?.id, autoPlay]);
@@ -41,20 +47,25 @@ export const useLearn = () => {
 		return () => clearTimeout(timer);
 	}, [countdown]);
 
-	// Auto-advance to the next word after `gapTime`. Stop once the last word has
-	// been shown/read instead of looping back to the start.
+	// Auto-advance after `gapTime`. At the end of the list, loop back until
+	// `loopCount` loops have played, then stop on the last word.
 	useEffect(() => {
 		if (!isPlaying || total === 0) return;
-		if (currentIndex >= total - 1) {
-			setIsPlaying(false);
-			return;
-		}
-		const timer = setTimeout(
-			() => setCurrentIndex((index) => index + 1),
-			gapTime * 1000,
-		);
+		const isLastWord = currentIndex >= total - 1;
+		const timer = setTimeout(() => {
+			if (!isLastWord) {
+				setCurrentIndex(currentIndex + 1);
+				return;
+			}
+			if (currentLoop >= loopCount) {
+				setIsPlaying(false);
+				return;
+			}
+			setCurrentLoop(currentLoop + 1);
+			setCurrentIndex(0);
+		}, gapTime * 1000);
 		return () => clearTimeout(timer);
-	}, [isPlaying, currentIndex, gapTime, total]);
+	}, [isPlaying, currentIndex, currentLoop, gapTime, total, loopCount]);
 
 	// Read the current word aloud when auto-read is enabled (never during the
 	// countdown). Firing on `countdown` clearing also reads the very first word.
@@ -63,14 +74,17 @@ export const useLearn = () => {
 		speak(words[currentIndex]?.term ?? "");
 	}, [currentIndex, autoRead, total, countdown]);
 
+	const isFinished = currentIndex >= total - 1 && currentLoop >= loopCount;
+
 	const togglePlay = useCallback(() => {
 		setCountdown(null);
-		// Restart from the beginning when replaying after reaching the end.
-		if (!isPlaying && currentIndex >= total - 1) {
+		// Restart from the beginning when replaying after all loops finished.
+		if (!isPlaying && isFinished) {
 			setCurrentIndex(0);
+			setCurrentLoop(1);
 		}
 		setIsPlaying((prev) => !prev);
-	}, [isPlaying, currentIndex, total]);
+	}, [isPlaying, isFinished]);
 
 	const goNext = useCallback(() => {
 		if (total === 0) return;
@@ -90,11 +104,13 @@ export const useLearn = () => {
 	}, [words, currentIndex, total]);
 
 	return {
-		isLoading,
+		isLoading: isInitializing || !user || isQueryLoading,
 		hasData: total > 0,
 		currentWord: words[currentIndex] ?? null,
 		currentIndex,
 		total,
+		currentLoop,
+		loopCount,
 		isPlaying,
 		countdown,
 		togglePlay,

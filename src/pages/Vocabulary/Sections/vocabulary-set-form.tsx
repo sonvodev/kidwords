@@ -1,6 +1,8 @@
 import {
 	VOCABULARY_GAP_TIME_MAX,
 	VOCABULARY_GAP_TIME_MIN,
+	VOCABULARY_LOOP_MAX,
+	VOCABULARY_LOOP_MIN,
 	VOCABULARY_QUANTITY_MAX,
 	VOCABULARY_QUANTITY_MIN,
 } from "@/common/constants/vocabulary.const";
@@ -25,6 +27,11 @@ const schema = z.object({
 		.number()
 		.min(VOCABULARY_GAP_TIME_MIN)
 		.max(VOCABULARY_GAP_TIME_MAX),
+	loopCount: z.coerce
+		.number()
+		.int()
+		.min(VOCABULARY_LOOP_MIN)
+		.max(VOCABULARY_LOOP_MAX),
 	autoRead: z.boolean(),
 	autoPlay: z.boolean(),
 	words: z
@@ -113,6 +120,7 @@ const VocabularySetForm: React.FC<VocabularySetFormProps> = ({
 		onSubmit({
 			words: values.words.map((word) => word.term.trim()).filter(Boolean),
 			gapTime: values.gapTime,
+			loopCount: values.loopCount,
 			autoRead: values.autoRead,
 			autoPlay: values.autoPlay,
 		});
@@ -186,6 +194,32 @@ const VocabularySetForm: React.FC<VocabularySetFormProps> = ({
 									<span className="text-xs text-red-500">
 										Nhập từ {VOCABULARY_GAP_TIME_MIN}–{VOCABULARY_GAP_TIME_MAX}{" "}
 										giây
+									</span>
+								)}
+							</div>
+
+							<div className="flex flex-col gap-1.5">
+								<label
+									htmlFor="loopCount"
+									className="text-sm font-medium text-slate-700"
+								>
+									Số vòng lặp
+								</label>
+								<input
+									id="loopCount"
+									type="number"
+									min={VOCABULARY_LOOP_MIN}
+									max={VOCABULARY_LOOP_MAX}
+									{...register("loopCount")}
+									className="rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-400"
+								/>
+								<span className="text-xs text-slate-400">
+									Đọc hết danh sách {VOCABULARY_LOOP_MIN}–{VOCABULARY_LOOP_MAX}{" "}
+									vòng rồi tự dừng.
+								</span>
+								{errors.loopCount && (
+									<span className="text-xs text-red-500">
+										Nhập từ {VOCABULARY_LOOP_MIN}–{VOCABULARY_LOOP_MAX} vòng
 									</span>
 								)}
 							</div>

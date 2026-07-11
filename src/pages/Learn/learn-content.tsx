@@ -13,6 +13,8 @@ const LearnContent: React.FC = () => {
 		currentWord,
 		currentIndex,
 		total,
+		currentLoop,
+		loopCount,
 		isPlaying,
 		countdown,
 		togglePlay,
@@ -64,6 +66,7 @@ const LearnContent: React.FC = () => {
 					<>
 						<span className="text-sm font-medium text-slate-400">
 							{currentIndex + 1} / {total}
+							{loopCount > 1 && ` · Vòng ${currentLoop}/${loopCount}`}
 						</span>
 						<div
 							key={currentWord.id}
