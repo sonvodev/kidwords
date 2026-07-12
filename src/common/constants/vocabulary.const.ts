@@ -12,8 +12,9 @@ export const VOCABULARY_FORM_DEFAULTS = {
 export const VOCABULARY_QUANTITY_MIN = 1;
 export const VOCABULARY_QUANTITY_MAX = 50;
 
-export const VOCABULARY_GAP_TIME_MIN = 1;
+export const VOCABULARY_GAP_TIME_MIN = 0.2;
 export const VOCABULARY_GAP_TIME_MAX = 30;
+export const VOCABULARY_GAP_TIME_STEP = 0.1;
 
 export const VOCABULARY_LOOP_MIN = 1;
 export const VOCABULARY_LOOP_MAX = 20;

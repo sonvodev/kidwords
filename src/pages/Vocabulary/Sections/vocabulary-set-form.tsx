@@ -1,6 +1,7 @@
 import {
 	VOCABULARY_GAP_TIME_MAX,
 	VOCABULARY_GAP_TIME_MIN,
+	VOCABULARY_GAP_TIME_STEP,
 	VOCABULARY_LOOP_MAX,
 	VOCABULARY_LOOP_MIN,
 	VOCABULARY_QUANTITY_MAX,
@@ -184,7 +185,7 @@ const VocabularySetForm: React.FC<VocabularySetFormProps> = ({
 								<input
 									id="gapTime"
 									type="number"
-									step="0.5"
+									step={VOCABULARY_GAP_TIME_STEP}
 									min={VOCABULARY_GAP_TIME_MIN}
 									max={VOCABULARY_GAP_TIME_MAX}
 									{...register("gapTime")}

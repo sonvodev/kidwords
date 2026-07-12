@@ -1,7 +1,7 @@
 {
 	"name": "kidwords-web",
 	"private": true,
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"packageManager": "pnpm@10.11.0",
 	"scripts": {
 		"dev": "rsbuild dev --open",
