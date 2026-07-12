@@ -93,12 +93,13 @@ export const useLearn = () => {
 		return () => clearTimeout(timer);
 	}, [isPlaying, currentIndex, currentLoop, gapTime, total, loopCount]);
 
-	// Read the current word aloud when auto-read is enabled (never during the
-	// countdown). Firing on `countdown` clearing also reads the very first word.
+	// Read the current word aloud only while actually playing (never during the
+	// countdown or on the initial passive load). When the countdown clears it
+	// sets `isPlaying`, which fires this and reads the very first word.
 	useEffect(() => {
-		if (!autoRead || total === 0 || countdown !== null) return;
+		if (!autoRead || total === 0 || countdown !== null || !isPlaying) return;
 		ttsService.speak(words[currentIndex]?.term ?? "", voice);
-	}, [currentIndex, autoRead, total, countdown, voice]);
+	}, [currentIndex, autoRead, total, countdown, voice, isPlaying]);
 
 	const isFinished = currentIndex >= total - 1 && currentLoop >= loopCount;
 
